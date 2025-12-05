@@ -1,9 +1,100 @@
 <!DOCTYPE html>
-<html lang="id">
-    <head>
-        <h1>Arvan Website</h1>
-    </head>
-    <body>
-        <p>Selamat datang di situs web Arvan!</p>
-    </body>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Arvan Tan</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        body {
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+        .section {
+            padding: 80px 0;
+        }
+        .hero {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: #f5f5f5;
+        }
+        .nav-link {
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg bg-white shadow-sm fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">Portfolio</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMenu">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#skills">Skills</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#achievements">Achievements</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="container">
+            <h1 class="display-4 fw-bold">Arvan Tan</h1>
+            <p class="lead">pengemar it di sma walau ga di support support amat</p>
+            <a href="#about" class="btn btn-primary mt-3">Scroll Down</a>
+        </div>
+    </header>
+
+    <section id="about" class="section">
+        <div class="container">
+            <h2 class="fw-bold mb-4">About Me</h2>
+            <p class="mb-3">xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</p>
+            <p>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</p>
+        </div>
+    </section>
+
+    <section id="skills" class="section bg-light">
+        <div class="container">
+            <h2 class="fw-bold mb-4">Skills</h2>
+            <ul>
+                <li>Skill 1 – xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</li>
+                <li>Skill 2 – xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</li>
+                <li>Skill 3 – xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</li>
+            </ul>
+        </div>
+    </section>
+
+    <section id="achievements" class="section">
+        <div class="container">
+            <h2 class="fw-bold mb-4">Achievements</h2>
+            <ul>
+                <li>Prestasi 1 – xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</li>
+                <li>Prestasi 2 – xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</li>
+                <li>Prestasi 3 – xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</li>
+            </ul>
+        </div>
+    </section>
+
+    <section id="contact" class="section bg-light">
+        <div class="container">
+            <h2 class="fw-bold mb-4">Contact</h2>
+            <p>Email: xxxxxxxxxxxxxxxxxxxx</p>
+            <p>Phone: xxxxxxxxxxxxxxxxxxxx</p>
+            <p>Address: xxxxxxxxxxxxxxxxxxxx</p>
+        </div>
+    </section>
+
+    <footer class="py-3 text-center bg-white border-top">
+        <p class="mb-0">© 2025 Portfolio Template</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
 </html>
