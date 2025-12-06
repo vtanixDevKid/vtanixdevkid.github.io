@@ -92,7 +92,7 @@ h1, h2, h3, h4, h5, h6 {
     left: 0;
     width: 100%;
     height: 100%;
-    background: url('https://images.unsplash.com/photo-1517697471339-4aa32003c11a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1776&q=80') center/cover no-repeat;
+    background: url('https://wallpapercave.com/wp/wp3988338.jpg') center/cover no-repeat;
     opacity: 0.2;
 }
 
@@ -216,7 +216,7 @@ h1, h2, h3, h4, h5, h6 {
     background: linear-gradient(90deg, var(--primary), var(--secondary));
 }
 
-    .circle {
+.circle {
     width: 150px;
     height: 150px;
     border-radius: 50%;
@@ -228,11 +228,13 @@ h1, h2, h3, h4, h5, h6 {
     font-size: 36px;
     position: relative;
     box-shadow: 0 10px 20px rgba(79, 70, 229, 0.15);
-    /* Remove the background property from here */
+    background: conic-gradient(var(--primary) 0deg, #e2e8f0 0deg); /* default */
+    z-index: 0;
 }
 
 .circle span {
-    font-size: 18px;
+    position: relative;
+    z-index: 2; /* pastikan selalu di atas */
 }
 
 .circle::before {
@@ -242,12 +244,10 @@ h1, h2, h3, h4, h5, h6 {
     height: 130px;
     background: white;
     border-radius: 50%;
+    z-index: 1; /* ini kadang masih dibawah span? */
 }
 
-.circle span {
-    position: relative;
-    z-index: 1;
-}
+
 
 .skill-text {
     text-align: center;
