@@ -1,0 +1,674 @@
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --accent-color: #e74c3c;
+    --light-color: #ecf0f1;
+    --success-color: #27ae60;
+    --warning-color: #f39c12;
+}
+
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding-bottom: 2rem;
+}
+
+.tournament-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #1a2530 100%);
+    color: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.tournament-header h1 {
+    margin: 0;
+    font-size: 2rem;
+}
+
+.tournament-header .lead {
+    margin: 0.5rem 0 0 0;
+    opacity: 0.9;
+}
+
+.tournament-controls {
+    background-color: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.tournament-controls h4 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.bracket-container {
+    display: flex;
+    justify-content: center;
+    padding: 30px 20px;
+    min-height: 600px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    position: relative;
+    overflow-x: auto;
+}
+
+.bracket-columns {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    width: 100%;
+    position: relative;
+}
+
+.round-column {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 220px;
+    max-width: 220px;
+    position: relative;
+    flex-shrink: 0;
+    margin: 0 30px;
+}
+
+.round-header {
+    text-align: center;
+    font-weight: bold;
+    color: var(--primary-color);
+    padding: 12px 5px;
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+    border-bottom: 2px solid var(--secondary-color);
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.match-wrapper {
+    position: relative;
+    margin: 25px 0;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+}
+
+/* Garis horizontal ke kanan */
+.match-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -30px;
+    width: 30px;
+    height: 2px;
+    background-color: #6c757d;
+    z-index: 1;
+    transform: translateY(-50%);
+}
+
+/* Garis vertikal untuk menghubungkan dua match */
+.match-connector {
+    position: absolute;
+    top: 50%;
+    right: -30px;
+    width: 2px;
+    height: 0;
+    background-color: #6c757d;
+    z-index: 1;
+    transform: translateY(-50%);
+}
+
+/* Atur tinggi garis vertikal berdasarkan posisi match */
+.match-wrapper:nth-child(odd) .match-connector {
+    height: calc(100% + 50px);
+    top: calc(50% + 25px);
+}
+
+.match-wrapper:nth-child(even) .match-connector {
+    height: calc(100% + 50px);
+    top: calc(-25px);
+}
+
+/* Hilangkan garis untuk round terakhir */
+.round-column:last-child .match-wrapper::before {
+    display: none;
+}
+
+.round-column:last-child .match-connector {
+    display: none;
+}
+
+.match-card {
+    background-color: white;
+    border: 2px solid #dee2e6;
+    border-radius: 6px;
+    padding: 12px;
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    width: 100%;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.match-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.match-card.completed {
+    border-color: var(--success-color);
+    background-color: #f8fff9;
+}
+
+.match-card.pending {
+    opacity: 0.9;
+}
+
+.team {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    margin: 4px 0;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    min-height: 40px;
+}
+
+.team:hover {
+    background-color: #f5f5f5;
+}
+
+.team.selected {
+    background-color: var(--secondary-color);
+    color: white;
+    border-color: var(--secondary-color);
+}
+
+.team.winner {
+    background-color: var(--success-color);
+    color: white;
+    border-color: var(--success-color);
+    font-weight: bold;
+}
+
+.team-name {
+    flex-grow: 1;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.seed {
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 12px;
+    padding: 3px 10px;
+    font-size: 0.85rem;
+    margin-left: 8px;
+    min-width: 60px;
+    text-align: center;
+}
+
+.selected .seed,
+.winner .seed {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.vs {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #666;
+    margin: 5px 0;
+    font-weight: bold;
+    font-style: italic;
+}
+
+.match-status {
+    text-align: center;
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 8px;
+    font-style: italic;
+    padding: 3px;
+    border-radius: 3px;
+    background-color: #f8f9fa;
+}
+
+.champion-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 220px;
+    max-width: 220px;
+    margin-left: 60px;
+    flex-shrink: 0;
+}
+
+.champion-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-bottom: 25px;
+    text-align: center;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.champion-box {
+    background: linear-gradient(135deg, gold 0%, #ffd700 100%);
+    border: 3px solid #ffd700;
+    border-radius: 8px;
+    padding: 30px 20px;
+    width: 100%;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.3rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.champion-box.pending {
+    background: #f8f9fa;
+    border-color: #ddd;
+    color: #6c757d;
+}
+
+.champion-seed {
+    font-size: 1.1rem;
+    font-weight: normal;
+    margin-top: 10px;
+    color: #333;
+}
+
+.controls-btn {
+    margin: 5px;
+}
+
+.instruction-box {
+    background-color: #e8f4fc;
+    border-left: 4px solid var(--secondary-color);
+    padding: 1rem;
+    border-radius: 4px;
+    margin-top: 1.5rem;
+}
+
+.instruction-box p {
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.instruction-box i {
+    color: var(--secondary-color);
+    margin-right: 8px;
+    width: 20px;
+}
+
+.stats-container {
+    background-color: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.stats-container h4 {
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    text-align: center;
+    padding: 1.2rem;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    margin-bottom: 1rem;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.stat-value {
+    font-size: 2.2rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: #6c757d;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.progress-container {
+    margin-top: 1.5rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.2rem;
+    border: 1px solid #e9ecef;
+}
+
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.progress {
+    height: 12px;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background-color: var(--secondary-color);
+    transition: width 0.5s ease;
+}
+
+/* Penyesuaian spacing berdasarkan jumlah peserta */
+/* Untuk 2 peserta */
+.bracket-2 .round-column:nth-child(1) .match-wrapper {
+    min-height: 300px;
+}
+
+.bracket-2 .champion-column {
+    margin-top: 150px;
+}
+
+.bracket-2 .match-connector {
+    height: 300px;
+}
+
+/* Untuk 4 peserta */
+.bracket-4 .round-column:nth-child(1) .match-wrapper {
+    min-height: 150px;
+}
+
+.bracket-4 .round-column:nth-child(2) .match-wrapper {
+    min-height: 300px;
+}
+
+.bracket-4 .champion-column {
+    margin-top: 150px;
+}
+
+.bracket-4 .match-connector {
+    height: 150px;
+}
+
+/* Untuk 8 peserta */
+.bracket-8 .round-column:nth-child(1) .match-wrapper {
+    min-height: 75px;
+}
+
+.bracket-8 .round-column:nth-child(2) .match-wrapper {
+    min-height: 150px;
+}
+
+.bracket-8 .round-column:nth-child(3) .match-wrapper {
+    min-height: 300px;
+}
+
+.bracket-8 .champion-column {
+    margin-top: 150px;
+}
+
+.bracket-8 .match-connector {
+    height: 75px;
+}
+
+/* Untuk 16 peserta */
+.bracket-16 .round-column:nth-child(1) .match-wrapper {
+    min-height: 37.5px;
+}
+
+.bracket-16 .round-column:nth-child(2) .match-wrapper {
+    min-height: 75px;
+}
+
+.bracket-16 .round-column:nth-child(3) .match-wrapper {
+    min-height: 150px;
+}
+
+.bracket-16 .round-column:nth-child(4) .match-wrapper {
+    min-height: 300px;
+}
+
+.bracket-16 .champion-column {
+    margin-top: 150px;
+}
+
+.bracket-16 .match-connector {
+    height: 37.5px;
+}
+
+.bye-match {
+    opacity: 0.7;
+    background-color: #f8f9fa;
+}
+
+.bye-label {
+    font-size: 0.85rem;
+    color: #6c757d;
+    text-align: center;
+    margin-top: 8px;
+    font-style: italic;
+}
+
+.empty-match {
+    visibility: hidden;
+    height: 100px;
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+    .bracket-container {
+        padding: 25px 15px;
+    }
+    
+    .round-column {
+        min-width: 200px;
+        max-width: 200px;
+        margin: 0 25px;
+    }
+    
+    .champion-column {
+        min-width: 200px;
+        max-width: 200px;
+        margin-left: 50px;
+    }
+    
+    .match-wrapper::before {
+        right: -25px;
+        width: 25px;
+    }
+    
+    .match-connector {
+        right: -25px;
+    }
+}
+
+@media (max-width: 992px) {
+    .bracket-container {
+        padding: 20px 10px;
+    }
+    
+    .round-column {
+        min-width: 180px;
+        max-width: 180px;
+        margin: 0 20px;
+    }
+    
+    .champion-column {
+        min-width: 180px;
+        max-width: 180px;
+        margin-left: 40px;
+    }
+    
+    .match-wrapper::before {
+        right: -20px;
+        width: 20px;
+    }
+    
+    .match-connector {
+        right: -20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .bracket-container {
+        padding: 15px 5px;
+        min-height: 500px;
+        justify-content: flex-start;
+    }
+    
+    .round-column {
+        min-width: 160px;
+        max-width: 160px;
+        margin: 0 15px;
+    }
+    
+    .round-header {
+        font-size: 1.1rem;
+        padding: 10px 3px;
+        margin-bottom: 15px;
+    }
+    
+    .match-card {
+        padding: 10px;
+        min-height: 90px;
+    }
+    
+    .team {
+        padding: 7px 8px;
+        min-height: 38px;
+    }
+    
+    .team-name {
+        font-size: 0.9rem;
+    }
+    
+    .seed {
+        font-size: 0.8rem;
+        padding: 2px 8px;
+        min-width: 55px;
+    }
+    
+    .champion-column {
+        min-width: 160px;
+        max-width: 160px;
+        margin-left: 30px;
+    }
+    
+    .champion-box {
+        padding: 25px 15px;
+        font-size: 1.2rem;
+        min-height: 130px;
+    }
+    
+    .champion-title {
+        font-size: 1.4rem;
+    }
+    
+    .match-wrapper::before {
+        right: -15px;
+        width: 15px;
+    }
+    
+    .match-connector {
+        right: -15px;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .bracket-container {
+        padding: 10px 5px;
+    }
+    
+    .round-column {
+        min-width: 140px;
+        max-width: 140px;
+        margin: 0 10px;
+    }
+    
+    .champion-column {
+        min-width: 140px;
+        max-width: 140px;
+        margin-left: 20px;
+    }
+    
+    .match-wrapper::before {
+        right: -10px;
+        width: 10px;
+    }
+    
+    .match-connector {
+        right: -10px;
+    }
+    
+    .tournament-header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .tournament-header .lead {
+        font-size: 1rem;
+    }
+}
+
+.line{
+    position:absolute;
+    border-top:2px solid #aaa;
+    pointer-events:none;
+}
+
+
+/* Animation untuk pemenang */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+.team.winner {
+    animation: pulse 0.5s ease-in-out;
+}
+
+.champion-box:not(.pending) {
+    animation: pulse 1s ease-in-out infinite alternate;
+}

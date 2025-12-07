@@ -167,6 +167,10 @@ h1, h2, h3, h4, h5, h6 {
     border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
+#site-tool-pribadi button{
+    min-width:250px; 
+}
+
 .about-card:hover {
     transform: translateY(-10px);
 }
@@ -415,5 +419,83 @@ footer {
     .skill-box {
         width: 100%;
         max-width: 300px;
+    }
+}
+
+/* Tool Section Styles */
+.tool-card {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    border: 1px solid #eaeaea;
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.tool-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.tool-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    color: white;
+    font-size: 1.5rem;
+}
+
+.tool-card h4 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.frame-header {
+    border: 1px solid #ddd;
+    border-bottom: none;
+    margin-top: 20px;
+}
+
+.frame-preview {
+    background: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.btn-sm {
+    padding: 0.4rem 1rem;
+    font-size: 0.875rem;
+}
+
+.btn-outline-primary {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary);
+    color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .tool-card {
+        padding: 20px;
+    }
+    
+    .frame-preview {
+        height: 400px !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .frame-preview {
+        height: 300px !important;
     }
 }

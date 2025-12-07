@@ -101,6 +101,90 @@
         </div>
     </section>
 
+    <!-- Site Tool Pribadi Section -->
+    <section id="site-tool-pribadi" class="section bg-light">
+        <div class="container">
+            <h2 class="section-title fade-in">Site Tool Pribadi</h2>
+            <p class="text-center mb-5 fade-in" style="max-width: 700px; margin: 0 auto; color: var(--gray);">
+                Alat-alat (gaguna) yang bisa digunakan:
+            </p>
+            
+            <div class="row mb-4">
+                <!-- Tool Cards -->
+                <div class="col-md-4 mb-4 fade-in">
+                    <div class="tool-card">
+                        <div class="tool-icon">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <h4 class="mb-3">Babak Turnamen Mobile Legend</h4>
+                        <p class="mb-3" style="color: var(--gray);">Alat untuk mengelola babak turnamen ML</p>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-gradient btn-sm" onclick="document.getElementById('frame').src='assets/html/alat1.html'">
+                                Buka di Frame
+                            </button>
+                            <a href="./assets/html/alat1.html" class="btn btn-outline-primary btn-sm" target="_blank">
+                                <i class="fas fa-external-link-alt me-1"></i>Tab Baru
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-4 fade-in">
+                    <div class="tool-card">
+                        <div class="tool-icon">
+                            <i class="fas fa-tools"></i>
+                        </div>
+                        <h4 class="mb-3">Placeholder Tool 1</h4>
+                        <p class="mb-3" style="color: var(--gray);">Alat placeholder untuk fitur masa depan</p>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-gradient btn-sm" onclick="document.getElementById('frame').src='assets/otherHtml/tool2.html'">
+                                Buka di Frame
+                            </button>
+                            <a href="./assets/otherHtml/tool2.html" class="btn btn-outline-primary btn-sm" target="_blank">
+                                <i class="fas fa-external-link-alt me-1"></i>Tab Baru
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-4 fade-in">
+                    <div class="tool-card">
+                        <div class="tool-icon">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <h4 class="mb-3">Placeholder Tool 2</h4>
+                        <p class="mb-3" style="color: var(--gray);">Alat placeholder untuk fitur masa depan</p>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-gradient btn-sm" onclick="document.getElementById('frame').src='assets/otherHtml/tool3.html'">
+                                Buka di Frame
+                            </button>
+                            <a href="./assets/otherHtml/tool3.html" class="btn btn-outline-primary btn-sm" target="_blank">
+                                <i class="fas fa-external-link-alt me-1"></i>Tab Baru
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Preview Frame -->
+            <div class="fade-in">
+                <div class="frame-header bg-white p-3 rounded-top d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Preview Tool</h5>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('frame').src='about:blank'">
+                        <i class="fas fa-times me-1"></i>Clear
+                    </button>
+                </div>
+                <iframe 
+                    id="frame" 
+                    class="frame-preview"
+                    style="width:100%; height:500px; border: 1px solid #ddd; border-top: none; border-radius: 0 0 12px 12px;"
+                    frameborder="0"
+                    title="Tool Preview"
+                ></iframe>
+            </div>
+        </div>
+    </section>
+
     <!-- Achievements Section -->
     <section id="achievements" class="section">
         <div class="container">
