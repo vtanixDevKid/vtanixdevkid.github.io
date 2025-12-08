@@ -179,3 +179,8 @@ body{
   .bracket-columns{gap:30px;}
   .round-column{min-width:160px;max-width:160px;}
 }
+@media(max-width:400px){
+  .bracket-container{padding:20px 10px;}
+  .bracket-columns{flex-direction:column;align-items:center;gap:40px;}
+  .round-column{min-width:100%;max-width:100%;}
+}
