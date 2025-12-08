@@ -1,6 +1,6 @@
-// alat1.js (replace existing)
-document.addEventListener('DOMContentLoaded', function() {
-  // DOM refs
+// alat1.js — full rewrite (drop-in replacement)
+document.addEventListener('DOMContentLoaded', () => {
+  // DOM refs (safe)
   const bracketContainer = document.getElementById('bracketContainer');
   const bracketColumns = document.getElementById('bracketColumns');
   const participantCountSelect = document.getElementById('participantCount');
@@ -9,9 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const resetBtn = document.getElementById('resetBtn');
   const simulateBtn = document.getElementById('simulateBtn');
   const clearBtn = document.getElementById('clearBtn');
-  
 
-  // stats
   const totalMatchesEl = document.getElementById('totalMatches');
   const completedMatchesEl = document.getElementById('completedMatches');
   const remainingMatchesEl = document.getElementById('remainingMatches');
@@ -19,451 +17,481 @@ document.addEventListener('DOMContentLoaded', function() {
   const tournamentProgressEl = document.getElementById('tournamentProgress');
   const progressPercentageEl = document.getElementById('progressPercentage');
 
-  // SVG overlay for connectors
+  // svg overlay for connector lines
   let svgOverlay = null;
-  function ensureSvg(){
-    if(svgOverlay) return;
-    svgOverlay = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  function ensureSvg() {
+    if (svgOverlay) return;
+    svgOverlay = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svgOverlay.classList.add('bracket-svg-overlay');
     svgOverlay.style.position = 'absolute';
-    svgOverlay.style.left = '0';
-    svgOverlay.style.top = '0';
+    svgOverlay.style.top = 0;
+    svgOverlay.style.left = 0;
     svgOverlay.style.width = '100%';
     svgOverlay.style.height = '100%';
     svgOverlay.style.pointerEvents = 'none';
-    svgOverlay.setAttribute('class','bracket-svg-overlay');
-    bracketContainer.appendChild(svgOverlay);
+    if (bracketContainer) bracketContainer.appendChild(svgOverlay);
   }
-  function clearSvg(){ if(!svgOverlay) return; while(svgOverlay.firstChild) svgOverlay.removeChild(svgOverlay.firstChild); }
-
-  // data
-  let tournamentData = {
-    name: "Championship Bracket",
-    participants: 8,
-    rounds: [],
-    champion: null,
-    stats: {}
-  };
-
-  const defaultPlayerNames = Array.from({length:16}, (_,i) => `Player ${i+1}`);
-
-  // events
-  generateBtn.addEventListener('click', initializeBracket);
-  resetBtn.addEventListener('click', resetBracket);
-  simulateBtn.addEventListener('click', simulateTournament);
-  clearBtn.addEventListener('click', clearResults);
-  participantCountSelect.addEventListener('change', () => tournamentData.participants = parseInt(participantCountSelect.value));
-  tournamentNameInput.addEventListener('change', () => {
-    tournamentData.name = tournamentNameInput.value;
-    document.querySelector('.tournament-header h1').innerHTML = `<i class="fas fa-trophy"></i> ${tournamentData.name}`;
-  });
-
-  // delegation for team clicks (prevents lost listeners)
-  bracketColumns.addEventListener('click', function(e){
-    const team = e.target.closest('.team');
-    if(!team) return;
-    const matchWrapper = team.closest('.match-wrapper');
-    if(!matchWrapper) return;
-    const round = parseInt(matchWrapper.dataset.round,10);
-    const idx = parseInt(matchWrapper.dataset.index,10);
-    const playerType = team.dataset.player; // "player1" or "player2"
-    if(isNaN(round) || isNaN(idx)) return;
-
-    const match = tournamentData.rounds[round][idx];
-    if(!match) return;
-    if(match.status !== 'pending' || match.isBye) return;
-
-    const player = match[playerType];
-    if(!player) return;
-
-    selectWinner(match, player, round, idx);
-  });
-
-  // init
-  initializeBracket();
-  window.addEventListener('resize', debounce(()=> {
-    drawAllConnectors();
-  }, 120));
-
-  /* --------- core: initialize & generation --------- */
-  function initializeBracket(){
-    const participants = tournamentData.participants;
-    tournamentData.rounds = [];
-    tournamentData.champion = null;
-
-    const totalRounds = Math.ceil(Math.log2(participants));
-    // players
-    const players = [];
-    for(let i=0;i<participants;i++){
-      players.push({ id: i+1, name: defaultPlayerNames[i] || `Player ${i+1}`, seed: i+1 });
-    }
-
-    // first round
-    const bracketFormat = document.querySelector('input[name="bracketFormat"]:checked')?.value || 'standard';
-    let round1 = bracketFormat === 'random' ? generateRandomBracket(players) : generateStandardBracket(players);
-    tournamentData.rounds.push(round1);
-
-    // next rounds
-    let prev = round1;
-    for(let r=2; r<= totalRounds; r++){
-      const next = generateNextRound(prev, r);
-      tournamentData.rounds.push(next);
-      prev = next;
-    }
-
-    renderBracket();
-    updateStats();
+  function clearSvg() {
+    if (!svgOverlay) return;
+    while (svgOverlay.firstChild) svgOverlay.removeChild(svgOverlay.firstChild);
   }
-
-  function generateStandardBracket(players){
-    const p = players.length;
-    const m = [];
-    if(p===2) m.push(createMatch(players[0],players[1],1,0));
-    else if(p===4){
-      m.push(createMatch(players[0],players[3],1,0));
-      m.push(createMatch(players[1],players[2],1,1));
-    } else if(p===8){
-      m.push(createMatch(players[0],players[7],1,0));
-      m.push(createMatch(players[3],players[4],1,1));
-      m.push(createMatch(players[2],players[5],1,2));
-      m.push(createMatch(players[1],players[6],1,3));
-    } else if(p===16){
-      // common seeding for 16
-      m.push(createMatch(players[0],players[15],1,0));
-      m.push(createMatch(players[7],players[8],1,1));
-      m.push(createMatch(players[4],players[11],1,2));
-      m.push(createMatch(players[3],players[12],1,3));
-      m.push(createMatch(players[5],players[10],1,4));
-      m.push(createMatch(players[2],players[13],1,5));
-      m.push(createMatch(players[6],players[9],1,6));
-      m.push(createMatch(players[1],players[14],1,7));
-    } else {
-      // fallback: pair sequentially
-      for(let i=0;i<players.length;i+=2){
-        m.push(createMatch(players[i], players[i+1]||null, 1, i/2));
-      }
-    }
-    return m;
-  }
-
-  function generateRandomBracket(players){
-    const shuffled = [...players].sort(()=>Math.random()-0.5);
-    const m = [];
-    for(let i=0;i<shuffled.length;i+=2){
-      m.push(createMatch(shuffled[i], shuffled[i+1]||null, 1, i/2));
-    }
-    return m;
-  }
-
-  function createMatch(p1,p2,round,idx){
-    return {
-      id: `match-${round}-${idx}`,
-      player1: p1 || null,
-      player2: p2 || null,
-      winner: null,
-      round: round-1, // store zero-based round index for easier mapping
-      status: 'pending',
-      isBye: p2 == null
-    };
-  }
-
-  function generateNextRound(prevRound, roundNum){
-    const count = Math.ceil(prevRound.length/2);
-    const arr = [];
-    for(let i=0;i<count;i++){
-      arr.push({
-        id: `match-${roundNum}-${i}`,
-        player1: null,
-        player2: null,
-        winner: null,
-        round: roundNum-1,
-        status: 'pending',
-        isBye: false
-      });
-    }
-    return arr;
-  }
-
-  /* --------- render --------- */
-  function renderBracket(){
-    // clear svg first (so overlay doesn't get messed)
-    if(svgOverlay){ clearSvg(); }
-    bracketColumns.innerHTML = '';
-
-    ensureSvg();
-
-    const rounds = tournamentData.rounds;
-    bracketContainer.className = 'bracket-container';
-    bracketContainer.classList.add(`bracket-${tournamentData.participants}`);
-
-    rounds.forEach((round, roundIndex) => {
-      const roundColumn = document.createElement('div');
-      roundColumn.className = 'round-column';
-      roundColumn.id = `round-${roundIndex+1}`;
-
-      const header = document.createElement('div');
-      header.className = 'round-header';
-      if(roundIndex === 0) header.textContent = 'Round 1';
-      else if(roundIndex === rounds.length-1) header.textContent = 'Final';
-      else if(roundIndex === rounds.length-2 && rounds.length>2) header.textContent = 'Semi Final';
-      else if(roundIndex === rounds.length-3 && rounds.length>3) header.textContent = 'Quarter Final';
-      else header.textContent = `Round ${roundIndex+1}`;
-      roundColumn.appendChild(header);
-
-      const columnContent = document.createElement('div');
-      columnContent.className = 'column-content';
-
-      round.forEach((match, matchIndex) => {
-        const matchWrapper = document.createElement('div');
-        matchWrapper.className = 'match-wrapper';
-        matchWrapper.dataset.round = roundIndex;
-        matchWrapper.dataset.index = matchIndex;
-
-        const matchCard = document.createElement('div');
-        matchCard.className = `match-card ${match.status === 'completed' ? 'completed' : 'pending'}`;
-        matchCard.id = match.id;
-
-        // team1
-        const t1 = createTeamNode(match.player1, 'player1');
-        // vs / or bye
-        if(!match.isBye){
-          const vs = document.createElement('div'); vs.className='vs'; vs.textContent='VS';
-          const t2 = createTeamNode(match.player2, 'player2');
-          matchCard.appendChild(t1);
-          matchCard.appendChild(vs);
-          matchCard.appendChild(t2);
-        } else {
-          matchCard.appendChild(t1);
-          const bye = document.createElement('div'); bye.className='bye-label'; bye.textContent='BYE';
-          matchCard.appendChild(bye);
-          // auto advance for bye
-          if(match.player1 && match.status==='pending'){
-            setTimeout(()=> selectWinner(match, match.player1, roundIndex, matchIndex), 100);
-          }
-        }
-
-        // status
-        const statusDiv = document.createElement('div');
-        statusDiv.className = 'match-status';
-        statusDiv.textContent = match.status === 'completed' ? 'SELESAI' : 'MENUNGGU';
-        matchCard.appendChild(statusDiv);
-
-        matchWrapper.appendChild(matchCard);
-        columnContent.appendChild(matchWrapper);
-      });
-
-      roundColumn.appendChild(columnContent);
-      bracketColumns.appendChild(roundColumn);
-    });
-
-    renderChampionColumn();
-    // Wait a tick for layout to settle then draw connectors
-    requestAnimationFrame(()=> {
-      drawAllConnectors();
-    });
-  }
-
-  function createTeamNode(player, key){
-    const div = document.createElement('div');
-    div.className = 'team';
-    div.dataset.player = key; // used by delegation
-
-    if(!player){
-      div.innerHTML = '<span class="team-name text-muted">TBD</span>';
-      div.classList.add('pending');
-      return div;
-    }
-
-    const name = document.createElement('span'); name.className='team-name'; name.textContent = player.name;
-    const seed = document.createElement('span'); seed.className='seed'; seed.textContent = `Seed ${player.seed}`;
-
-    div.appendChild(name); div.appendChild(seed);
-
-    // mark winner
-    // (we do visual class on render via tournamentData)
-    return div;
-  }
-
-  function renderChampionColumn(){
-    const championColumn = document.createElement('div');
-    championColumn.className = 'champion-column';
-
-    const championTitle = document.createElement('div'); championTitle.className='champion-title'; championTitle.textContent='CHAMPION';
-    championColumn.appendChild(championTitle);
-
-    const championBox = document.createElement('div'); championBox.className='champion-box';
-    if(tournamentData.champion){
-      championBox.innerHTML = `${tournamentData.champion.name}<div class="champion-seed">Seed ${tournamentData.champion.seed}</div>`;
-    } else {
-      championBox.textContent = 'TBD';
-      championBox.classList.add('pending');
-    }
-    championColumn.appendChild(championBox);
-    bracketColumns.appendChild(championColumn);
-  }
-
-  /* --------- connectors drawing (SVG polylines) --------- */
-  function drawAllConnectors(){
-    clearSvg();
-    ensureSvg();
-    const rounds = Array.from(document.querySelectorAll('.round-column'));
-    if(rounds.length <= 1) return;
-
-    // calculate offset of svg relative to page
-    const containerRect = bracketContainer.getBoundingClientRect();
-    // for each round except last
-    rounds.forEach((roundCol, i) => {
-      const nextCol = rounds[i+1];
-      if(!nextCol) return;
-
-      const matches = Array.from(roundCol.querySelectorAll('.match-wrapper'));
-      const nextMatches = Array.from(nextCol.querySelectorAll('.match-wrapper'));
-
-      matches.forEach((m, idx) => {
-        const targetIndex = Math.floor(idx/2);
-        const target = nextMatches[targetIndex];
-        if(!target) return;
-        drawConnectorBetween(m, target, containerRect);
-      });
-    });
-  }
-
-  function drawConnectorBetween(fromWrap, toWrap, containerRect){
-    const fromRect = fromWrap.getBoundingClientRect();
-    const toRect = toWrap.getBoundingClientRect();
-
-    // compute points relative to svg (container)
-    const x1 = fromRect.right - containerRect.left; // start at right edge of from
-    const y1 = fromRect.top - containerRect.top + fromRect.height/2;
-    const x2 = toRect.left - containerRect.left; // end at left edge of to
-    const y2 = toRect.top - containerRect.top + toRect.height/2;
-
-    // midpoint x (for elbow)
-    const midX = x1 + Math.max(20, (x2 - x1) / 2);
-
-    // polyline points: x1,y1 -> midX,y1 -> midX,y2 -> x2,y2
-    const points = `${x1},${y1} ${midX},${y1} ${midX},${y2} ${x2},${y2}`;
-
-    const poly = document.createElementNS('http://www.w3.org/2000/svg','polyline');
+  function createPolyline(points) {
+    const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
     poly.setAttribute('points', points);
-    poly.setAttribute('fill','none');
-    poly.setAttribute('stroke','#6c757d');
-    poly.setAttribute('stroke-width','2');
-    poly.setAttribute('stroke-linecap','round');
-    poly.setAttribute('stroke-linejoin','round');
+    poly.setAttribute('fill', 'none');
+    poly.setAttribute('stroke', '#6c757d');
+    poly.setAttribute('stroke-width', '2');
+    poly.setAttribute('stroke-linecap', 'round');
+    poly.setAttribute('stroke-linejoin', 'round');
     svgOverlay.appendChild(poly);
   }
 
-  /* --------- selection / progression --------- */
-  function selectWinner(match, winner, roundIndex, matchIndex){
-    if(match.status !== 'pending') return;
-    match.winner = winner;
-    match.status = 'completed';
-    tournamentData.rounds[roundIndex][matchIndex] = match;
+  // data model
+  const bracketData = {
+    name: 'Championship Bracket',
+    participants: 8,
+    maxParticipants: 8,
+    totalRounds: 0,
+    rounds: [], // array of rounds; each round = array of matches {player1, player2, winner, isBye, status}
+    champion: null
+  };
 
-    // progress to next round
-    if(roundIndex < tournamentData.rounds.length - 1){
-      const nextIndex = Math.floor(matchIndex/2);
-      const position = matchIndex % 2; // 0 -> player1, 1 -> player2
-      const nextMatch = tournamentData.rounds[roundIndex+1][nextIndex];
-      if(nextMatch){
-        if(position === 0) nextMatch.player1 = winner;
-        else nextMatch.player2 = winner;
-        tournamentData.rounds[roundIndex+1][nextIndex] = nextMatch;
-        // if both players present and one is null, it's pending until the other fills
-      }
-    } else {
-      tournamentData.champion = winner;
+  const defaultPlayerNames = Array.from({ length: 64 }, (_, i) => `Player ${i + 1}`);
+
+  // safe addEvent
+  generateBtn?.addEventListener('click', () => generateBracket());
+  resetBtn?.addEventListener('click', () => resetBracket());
+  simulateBtn?.addEventListener('click', () => simulateTournament());
+  clearBtn?.addEventListener('click', () => clearResults());
+  participantCountSelect?.addEventListener('change', function () {
+    bracketData.participants = parseInt(this.value) || 8;
+    generateBracket();
+  });
+  tournamentNameInput?.addEventListener('change', function () {
+    bracketData.name = this.value || bracketData.name;
+    const h = document.querySelector('.tournament-header h1');
+    if (h) h.innerHTML = `<i class="fas fa-trophy"></i> ${bracketData.name}`;
+  });
+
+  // init
+  generateBracket();
+  window.addEventListener('resize', debounce(drawAllConnectors, 120));
+
+  /* ------------- core ------------- */
+  function generateBracket() {
+    const p = Math.max(1, bracketData.participants || 8);
+    bracketData.participants = p;
+    bracketData.totalRounds = Math.ceil(Math.log2(p));
+    bracketData.maxParticipants = Math.pow(2, bracketData.totalRounds);
+
+    // build seeded array (left-to-right). we'll apply usual 1vN ordering for 4/8/16 to look normal
+    const seeded = new Array(bracketData.maxParticipants).fill(null).map((_, i) => {
+      if (i < p) return { id: i + 1, name: defaultPlayerNames[i], seed: i + 1 };
+      return null;
+    });
+
+    if (bracketData.maxParticipants === 8) {
+      const order = [0,7,3,4,2,5,1,6];
+      const tmp = new Array(8).fill(null);
+      for (let i=0;i<8;i++) tmp[i] = seeded[order[i]];
+      for (let i=0;i<8;i++) seeded[i] = tmp[i];
+    } else if (bracketData.maxParticipants === 16) {
+      const order = [0,15,7,8,3,12,4,11,5,10,2,13,6,9,1,14];
+      const tmp = new Array(16).fill(null);
+      for (let i=0;i<16;i++) tmp[i] = seeded[order[i]];
+      for (let i=0;i<16;i++) seeded[i] = tmp[i];
     }
 
-    // visual: re-render whole bracket (cheap and simple)
+    // build first round matches
+    const rounds = [];
+    const firstRound = [];
+    for (let i = 0; i < bracketData.maxParticipants; i += 2) {
+      const a = seeded[i] || null;
+      const b = seeded[i+1] || null;
+      firstRound.push({
+        player1: a,
+        player2: b,
+        winner: null,
+        isBye: !(a && b),
+        status: 'pending'
+      });
+    }
+    rounds.push(firstRound);
+
+    // create later rounds with empty slots
+    let prevCount = firstRound.length;
+    for (let r = 1; r < bracketData.totalRounds; r++) {
+      const nextCount = Math.ceil(prevCount / 2);
+      const arr = new Array(nextCount).fill(null).map(() => ({
+        player1: null,
+        player2: null,
+        winner: null,
+        isBye: false,
+        status: 'pending'
+      }));
+      rounds.push(arr);
+      prevCount = nextCount;
+    }
+
+    bracketData.rounds = rounds;
+    bracketData.champion = null;
+
+    // DO NOT auto-advance byes here to avoid earlier bug. Use simulate to auto-fill if wanted.
     renderBracket();
     updateStats();
-    showNotification(`${winner.name} (Seed ${winner.seed}) memenangkan match!`);
   }
 
-  /* --------- utilities: stats, simulate, reset, clear --------- */
-  function updateStats(){
-    let total=0, completed=0;
-    tournamentData.rounds.forEach(r => r.forEach(m => { total++; if(m.status==='completed') completed++; }));
-    const remaining = total - completed;
-    const percent = total ? Math.round((completed/total)*100) : 0;
-    totalMatchesEl.textContent = total;
-    completedMatchesEl.textContent = completed;
-    remainingMatchesEl.textContent = remaining;
-    completionRateEl.textContent = `${percent}%`;
-    tournamentProgressEl.style.width = `${percent}%`;
-    progressPercentageEl.textContent = `${percent}%`;
-    // color classes
-    tournamentProgressEl.className = percent < 30 ? 'progress-bar' : (percent < 70 ? 'progress-bar bg-warning' : 'progress-bar bg-success');
-    tournamentData.stats = { total, completed, remaining, completionRate: `${percent}%`};
-  }
+  /* ------------- render ------------- */
+  function renderBracket() {
+    if (!bracketColumns) return;
+    bracketColumns.innerHTML = '';
+    bracketColumns.className = 'bracket-columns';
+    bracketColumns.classList.add(`bracket-${bracketData.maxParticipants}`);
 
-  function simulateTournament(){
-    if(tournamentData.champion){ alert('Turnamen sudah selesai! Reset terlebih dahulu.'); return; }
-    // simulate from round 0 to last
-    for(let r=0;r<tournamentData.rounds.length;r++){
-      for(let m=0;m<tournamentData.rounds[r].length;m++){
-        const match = tournamentData.rounds[r][m];
-        if(match.status === 'pending'){
-          if(match.isBye && match.player1){ match.winner = match.player1; match.status='completed'; if(r < tournamentData.rounds.length-1) updateNextRoundData(r,m,match.player1); else tournamentData.champion = match.player1; }
-          else if(match.player1 && match.player2){
-            const winner = Math.random()>0.5 ? match.player1 : match.player2;
-            match.winner = winner; match.status='completed';
-            if(r < tournamentData.rounds.length-1) updateNextRoundData(r,m,winner); else tournamentData.champion = winner;
+    // each round
+    bracketData.rounds.forEach((roundArr, rIdx) => {
+      const roundCol = document.createElement('div');
+      roundCol.className = 'round-column';
+
+      const header = document.createElement('div');
+      header.className = 'round-header';
+      if (rIdx === bracketData.rounds.length - 1) header.textContent = 'Final';
+      else if (rIdx === bracketData.rounds.length - 2) header.textContent = 'Semi Final';
+      else header.textContent = `Round ${rIdx + 1}`;
+      roundCol.appendChild(header);
+
+      const roundMatchesWrap = document.createElement('div');
+      roundMatchesWrap.className = 'round-matches';
+
+      // group by pairs for spacing: two matches per visual pair
+      for (let m = 0; m < roundArr.length; m += 2) {
+        const pair = document.createElement('div');
+        pair.className = 'pair-wrapper';
+        // match A
+        const matchA = roundArr[m];
+        pair.appendChild(buildMatchWrapper(matchA, rIdx, m));
+        // match B (maybe undefined)
+        if (m + 1 < roundArr.length) pair.appendChild(buildMatchWrapper(roundArr[m + 1], rIdx, m + 1));
+        else pair.appendChild(buildMatchWrapper(null, rIdx, m + 1)); // empty placeholder
+        roundMatchesWrap.appendChild(pair);
+      }
+
+      roundCol.appendChild(roundMatchesWrap);
+      bracketColumns.appendChild(roundCol);
+    });
+
+    // champion column
+    const champCol = document.createElement('div');
+    champCol.className = 'champion-column';
+    const title = document.createElement('div'); title.className = 'champion-title'; title.textContent = 'CHAMPION';
+    const box = document.createElement('div'); box.className = 'champion-box';
+    if (bracketData.champion) {
+      box.innerHTML = `${bracketData.champion.name}<div class="champion-seed">Seed ${bracketData.champion.seed}</div>`;
+      box.classList.remove('pending');
+    } else {
+      box.textContent = 'TBD';
+      box.classList.add('pending');
+    }
+    champCol.appendChild(title); champCol.appendChild(box);
+    bracketColumns.appendChild(champCol);
+
+    // bind interactions AFTER DOM painted
+    setTimeout(() => {
+      // team click -> select winner
+      document.querySelectorAll('.match-card').forEach(card => {
+        if (card.classList.contains('bye-match')) return; // skip bye-only cards
+        const teams = card.querySelectorAll('.team');
+        teams.forEach(teamEl => {
+          teamEl.onclick = () => {
+            // protect: no double selection if match completed
+            if (card.classList.contains('completed')) return;
+            const roundIndex = parseInt(card.dataset.round, 10);
+            const matchIndex = parseInt(card.dataset.index, 10);
+            const teamNum = parseInt(teamEl.dataset.team, 10);
+            selectWinnerByIndex(roundIndex, matchIndex, teamNum);
+          };
+        });
+      });
+
+      // editable names: contenteditable on .team-name
+      document.querySelectorAll('.team-name[contenteditable="true"]').forEach(span => {
+        span.onblur = () => {
+          const wrapper = span.closest('.match-wrapper');
+          if (!wrapper) return;
+          const r = parseInt(wrapper.dataset.round, 10);
+          const idx = parseInt(wrapper.dataset.index, 10);
+          const parentTeam = span.closest('.team');
+          const teamNum = parentTeam?.dataset?.team;
+          if (isNaN(r) || isNaN(idx) || !teamNum) return;
+          const newName = span.textContent.trim() || span.dataset.placeholder || 'TBD';
+          // update model
+          const match = bracketData.rounds[r][idx];
+          if (!match) return;
+          if (teamNum === '1') {
+            if (match.player1) match.player1.name = newName;
+            else match.player1 = { id: null, name: newName, seed: null };
+          } else {
+            if (match.player2) match.player2.name = newName;
+            else match.player2 = { id: null, name: newName, seed: null };
           }
+          renderBracket(); // rerender to reflect seed / classes
+        };
+      });
+
+      ensureSvg();
+      drawAllConnectors();
+      updateStats();
+    }, 0);
+  }
+
+  function buildMatchWrapper(matchObj, roundIndex, matchIndex) {
+    const wrapper = document.createElement('div');
+    wrapper.className = matchObj ? 'match-wrapper' : 'match-wrapper empty-match';
+    wrapper.dataset.round = String(roundIndex);
+    wrapper.dataset.index = String(matchIndex);
+
+    const card = document.createElement('div');
+    card.className = 'match-card';
+    if (!matchObj) {
+      card.classList.add('bye-match');
+      card.innerHTML = `<div class="team"><span class="team-name">TBD</span></div><div class="vs">VS</div><div class="team"><span class="team-name">TBD</span></div><div class="match-status">MENUNGGU</div>`;
+      wrapper.appendChild(card);
+      return wrapper;
+    }
+
+    if (matchObj.status === 'completed') card.classList.add('completed'); else card.classList.add('pending');
+    if (matchObj.isBye) card.classList.add('bye-match');
+
+    // team1 element
+    const t1 = document.createElement('div');
+    t1.className = 'team' + (matchObj.winner && matchObj.winner.id === (matchObj.player1 && matchObj.player1.id) ? ' winner' : '');
+    t1.dataset.team = '1';
+    const name1 = document.createElement('span');
+    name1.className = 'team-name';
+    name1.textContent = matchObj.player1 ? matchObj.player1.name : 'TBD';
+    name1.setAttribute('contenteditable', 'true');
+    name1.dataset.placeholder = 'TBD';
+    const seed1 = document.createElement('span');
+    seed1.className = 'seed';
+    seed1.textContent = matchObj.player1 && matchObj.player1.seed ? `Seed ${matchObj.player1.seed}` : '';
+    if (!seed1.textContent) seed1.style.display = 'none';
+    t1.appendChild(name1); if (seed1.textContent) t1.appendChild(seed1);
+
+    // team2 element
+    const t2 = document.createElement('div');
+    t2.className = 'team' + (matchObj.winner && matchObj.winner.id === (matchObj.player2 && matchObj.player2.id) ? ' winner' : '');
+    t2.dataset.team = '2';
+    const name2 = document.createElement('span');
+    name2.className = 'team-name';
+    name2.textContent = matchObj.player2 ? matchObj.player2.name : 'TBD';
+    name2.setAttribute('contenteditable', 'true');
+    name2.dataset.placeholder = 'TBD';
+    const seed2 = document.createElement('span');
+    seed2.className = 'seed';
+    seed2.textContent = matchObj.player2 && matchObj.player2.seed ? `Seed ${matchObj.player2.seed}` : '';
+    if (!seed2.textContent) seed2.style.display = 'none';
+    t2.appendChild(name2); if (seed2.textContent) t2.appendChild(seed2);
+
+    const vs = document.createElement('div'); vs.className = 'vs'; vs.textContent = 'VS';
+    const status = document.createElement('div'); status.className = 'match-status';
+    status.textContent = matchObj.status === 'completed' ? 'SELESAI' : (matchObj.isBye ? 'BYE' : 'MENUNGGU');
+
+    card.dataset.round = String(roundIndex);
+    card.dataset.index = String(matchIndex);
+    card.appendChild(t1);
+    card.appendChild(vs);
+    card.appendChild(t2);
+    card.appendChild(status);
+
+    wrapper.appendChild(card);
+    return wrapper;
+  }
+
+  /* ------------- connectors ------------- */
+  function drawAllConnectors() {
+    clearSvg();
+    ensureSvg();
+    if (!bracketContainer) return;
+
+    const containerRect = bracketContainer.getBoundingClientRect();
+    const columns = Array.from(document.querySelectorAll('.round-column'));
+
+    for (let r = 0; r < columns.length - 1; r++) {
+      const currMatches = Array.from(columns[r].querySelectorAll('.match-wrapper'))
+        .filter(m => !m.classList.contains('empty-match'));
+
+      const nextMatches = Array.from(columns[r+1].querySelectorAll('.match-wrapper'))
+        .filter(m => !m.classList.contains('empty-match'));
+
+        currMatches.forEach((match,i)=>{
+        const nextIndex = Math.floor(i/2)
+        const target = nextMatches[nextIndex]
+        if(!target) return
+
+        const card1 = match.querySelector('.match-card')
+        const card2 = target.querySelector('.match-card')
+
+        const r1 = card1.getBoundingClientRect()
+        const r2 = card2.getBoundingClientRect()
+
+        const x1 = r1.right - containerRect.left
+        const y1 = r1.top - containerRect.top + r1.height/2
+
+        const x2 = r2.left - containerRect.left
+        const y2 = r2.top - containerRect.top + r2.height/2
+
+        const midX = x1 + (x2-x1)/2
+
+        createPolyline(`${x1},${y1} ${midX},${y1} ${midX},${y2} ${x2},${y2}`)
+      })
+    }
+  }
+
+  /* ------------- selection / progression ------------- */
+  function selectWinnerByIndex(roundIndex, matchIndex, teamNum) {
+    const round = bracketData.rounds[roundIndex];
+    if (!round) return;
+    const match = round[matchIndex];
+    if (!match || match.status === 'completed') return;
+
+    const winner = teamNum === 1 ? match.player1 : match.player2;
+    if (!winner) return; // nothing to choose (TBD)
+
+    // set winner & status
+    match.winner = winner;
+    match.status = 'completed';
+
+    // advance to next round: nextMatchIndex = floor(matchIndex/2)
+    if (roundIndex + 1 < bracketData.rounds.length) {
+      const nextMatchIndex = Math.floor(matchIndex / 2);
+      const nextMatch = bracketData.rounds[roundIndex + 1][nextMatchIndex];
+      if (nextMatch) {
+        const position = matchIndex % 2; // 0 => goes to player1 slot, 1 => player2 slot
+        if (position === 0) {
+          nextMatch.player1 = nextMatch.player1 || winner;
+        } else {
+          nextMatch.player2 = nextMatch.player2 || winner;
+        }
+        nextMatch.isBye = !(nextMatch.player1 && nextMatch.player2);
+      }
+    } else {
+      // final
+      bracketData.champion = winner;
+    }
+
+    renderBracket();
+    updateStats();
+    showNotification(`${winner.name} memenangkan match`);
+  }
+
+  /* ------------- simulate / reset / clear ------------- */
+  function simulateTournament() {
+    if (bracketData.champion) {
+      alert('Turnamen sudah selesai. Reset dulu.');
+      return;
+    }
+    for (let r=0;r<bracketData.rounds.length;r++) {
+      const round = bracketData.rounds[r];
+      for (let m=0;m<round.length;m++) {
+        const match = round[m];
+        if (!match || match.status === 'completed') continue;
+        // determine winner: if one side null -> the other wins; else random
+        let winner = null;
+        if (match.player1 && !match.player2) winner = match.player1;
+        else if (!match.player1 && match.player2) winner = match.player2;
+        else if (match.player1 && match.player2) winner = Math.random() > 0.5 ? match.player1 : match.player2;
+        if (!winner) continue;
+        match.winner = winner;
+        match.status = 'completed';
+        if (r + 1 < bracketData.rounds.length) {
+          const nextIdx = Math.floor(m / 2);
+          const pos = m % 2;
+          const next = bracketData.rounds[r+1][nextIdx];
+          if (next) {
+            if (pos === 0) next.player1 = next.player1 || winner;
+            else next.player2 = next.player2 || winner;
+            next.isBye = !(next.player1 && next.player2);
+          }
+        } else {
+          bracketData.champion = winner;
         }
       }
     }
-    renderBracket(); updateStats(); showNotification('Turnamen telah disimulasikan!');
+    renderBracket();
+    updateStats();
+    showNotification('Turnamen disimulasikan.');
   }
 
-  function updateNextRoundData(roundIndex, matchIndex, winner){
-    const nextIdx = Math.floor(matchIndex/2);
-    const pos = matchIndex % 2;
-    const nextMatch = tournamentData.rounds[roundIndex+1][nextIdx];
-    if(!nextMatch) return;
-    if(pos===0) nextMatch.player1 = winner; else nextMatch.player2 = winner;
-    tournamentData.rounds[roundIndex+1][nextIdx] = nextMatch;
+  function updateStats() {
+    let total = 0, completed = 0;
+    bracketData.rounds.forEach(r => {
+      total += r.length;
+      completed += r.filter(m => m && m.status === 'completed').length;
+    });
+    const remaining = total - completed;
+    const percent = total ? Math.round((completed / total) * 100) : 0;
+    if (totalMatchesEl) totalMatchesEl.textContent = total;
+    if (completedMatchesEl) completedMatchesEl.textContent = completed;
+    if (remainingMatchesEl) remainingMatchesEl.textContent = remaining;
+    if (completionRateEl) completionRateEl.textContent = `${percent}%`;
+    if (tournamentProgressEl) tournamentProgressEl.style.width = `${percent}%`;
+    if (progressPercentageEl) progressPercentageEl.textContent = `${percent}%`;
+    if (tournamentProgressEl) {
+      tournamentProgressEl.className = 'progress-bar';
+      if (percent >= 70) tournamentProgressEl.classList.add('bg-success');
+      else if (percent >= 30) tournamentProgressEl.classList.add('bg-warning');
+    }
   }
 
-  function resetBracket(){
-    if(!confirm('Apakah Anda yakin ingin mereset bracket? Semua progres akan hilang.')) return;
-    initializeBracket();
-    showNotification('Bracket telah direset');
+  function resetBracket() {
+    if (!confirm('Reset bracket? Semua progres hilang.')) return;
+    generateBracket();
+    showNotification('Bracket di-reset.');
   }
 
-  function clearResults(){
-    if(!confirm('Apakah Anda yakin ingin menghapus semua hasil?')) return;
-    tournamentData.rounds.forEach((r,ri)=> r.forEach((m,mi)=>{
-      if(ri===0){
-        m.winner=null; m.status='pending';
-      } else {
-        m.player1=null; m.player2=null; m.winner=null; m.status='pending';
-      }
-    }));
-    tournamentData.champion = null;
-    renderBracket(); updateStats(); showNotification('Semua hasil telah dihapus');
+  function clearResults() {
+    if (!confirm('Hapus semua hasil?')) return;
+    bracketData.rounds.forEach((r, ridx) => {
+      r.forEach((m, midx) => {
+        if (!m) return;
+        m.winner = null;
+        m.status = 'pending';
+        if (ridx > 0) {
+          m.player1 = null;
+          m.player2 = null;
+          m.isBye = false;
+        } else {
+          m.isBye = !(m.player1 && m.player2);
+        }
+      });
+    });
+    bracketData.champion = null;
+    renderBracket();
+    updateStats();
+    showNotification('Hasil dihapus.');
   }
 
-  /* --------- small helpers --------- */
-  function showNotification(message){
-    const notification = document.createElement('div');
-    notification.className = 'position-fixed bottom-0 end-0 p-3';
-    notification.style.zIndex = '1050';
-    notification.innerHTML = `
+  /* ------------- misc ------------- */
+  function showNotification(msg) {
+    const n = document.createElement('div');
+    n.className = 'position-fixed bottom-0 end-0 p-3';
+    n.style.zIndex = 1050;
+    n.innerHTML = `
       <div class="toast show" role="alert">
         <div class="toast-header bg-primary text-white">
           <strong class="me-auto">Bracket</strong>
           <button type="button" class="btn-close btn-close-white"></button>
         </div>
-        <div class="toast-body">${message}</div>
-      </div>`;
-    document.body.appendChild(notification);
-    const btn = notification.querySelector('.btn-close');
-    btn.addEventListener('click', ()=> notification.remove());
-    setTimeout(()=> notification.remove(), 3000);
+        <div class="toast-body">${msg}</div>
+      </div>
+    `;
+    document.body.appendChild(n);
+    n.querySelector('.btn-close').addEventListener('click', () => n.remove());
+    setTimeout(() => n.remove(), 2500);
   }
 
-  function debounce(fn, wait){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), wait); }; }
-
+  function debounce(fn, wait=100) {
+    let t;
+    return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), wait); };
+  }
 });
