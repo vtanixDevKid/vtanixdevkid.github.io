@@ -8,7 +8,8 @@
 }
 
 body{
-  background:#f8f9fa;
+  background-image:url('..assets/image/backround.png');
+  background:#ffffff;
   font-family:Segoe UI,Tahoma,Verdana;
 }
 
@@ -17,7 +18,8 @@ body{
   justify-content:center;
   align-items:flex-start;
   padding:30px 20px;
-  background:white;
+  background: rgba(255,255,255,.4);
+  backdrop-filter: blur(4px);
   border-radius:8px;
   box-shadow:0 2px 10px rgba(0,0,0,.1);
   position:relative;
@@ -29,7 +31,7 @@ body{
   display:flex;
   align-items:center;
   position:relative;
-  gap:60px;
+  gap: 60px;
 }
 
 .round-column{
@@ -41,6 +43,14 @@ body{
   max-width:200px;
 }
 
+.round-column:nth-child(odd) .match-wrapper{
+    margin-top:30px;
+}
+.round-column:nth-child(even) .match-wrapper{
+    margin-bottom:30px;
+}
+
+
 .round-header{
   font-weight:600;
   font-size:1.1rem;
@@ -51,7 +61,9 @@ body{
 }
 
 .round-matches{
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 60;
 }
 
 .pair-wrapper{
@@ -59,8 +71,8 @@ body{
   gap: 0;
   display:flex;
   flex-direction:column;
-  gap:40px;
-  align-items:center;
+  gap: 0;
+  align-items:flex-start;
 }
 
 .match-wrapper{
@@ -68,12 +80,12 @@ body{
   position: relative;
   width:100%;
   display:flex;
-  justify-content:center;
+  justify-content:flex-start;
 }
 
 .match-card{
   width:100%;
-  background:white;
+  background:(255,255,255,.75);
   border:2px solid #dee2e6;
   border-radius:6px;
   padding:12px;
